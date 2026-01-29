@@ -129,8 +129,11 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            <div className="mt-auto pt-12 hidden lg:block">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em]">© 2024 DESIGNED FOR CLARITY</p>
+            <div className="mt-auto pt-16 hidden lg:block">
+              <div className="flex space-x-6">
+                {process.env.PUBLIC_BLOG_GITHUB && <a href={process.env.PUBLIC_BLOG_GITHUB} target='_blank' className="text-xs font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest">Github</a>}
+                <a href="#" className="text-xs font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest">RSS</a>
+              </div>
             </div>
           </div>
         </header>
@@ -207,14 +210,14 @@ const App: React.FC = () => {
               )}
             </div>
 
-            <footer className="mt-32 pt-12 border-t border-slate-200">
+            <footer className="mt-32 pt-12 border-t border-slate-200 lg:hidden">
               <div className="flex items-center justify-between">
                 <div className="flex space-x-6">
                   <a href="#" className="text-xs font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest">Twitter</a>
                   <a href="#" className="text-xs font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest">Github</a>
                   <a href="#" className="text-xs font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest">RSS</a>
                 </div>
-                <span className="text-[10px] font-bold text-slate-300 tracking-[0.4em]">STAY CURIOUS</span>
+                <span className="text-[10px] font-bold text-slate-300 tracking-[0.4em]"></span>
               </div>
             </footer>
           </div>
