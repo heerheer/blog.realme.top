@@ -122,7 +122,7 @@ const App: React.FC = () => {
                       className="group block text-left"
                     >
                       <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 group-hover:text-indigo-600 transition-colors">{formatDate(post.date)}</span>
-                      <span className="block text-sm font-semibold text-slate-800 leading-snug group-hover:underline underline-offset-4 decoration-2">{post.title}</span>
+                      <span className="block text-sm font-semibold text-slate-800 leading-snug group-hover:underline underline-offset-4 decoration-2">{post.title || post.id}</span>
                     </button>
                   ))}
                 </div>
