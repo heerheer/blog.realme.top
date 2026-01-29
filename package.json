@@ -1,0 +1,26 @@
+{
+  "name": "minimalist-journal",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "bun ./server.ts --watch",
+    "build": "bun build ./server.ts --outdir=./dist --target=bun"
+  },
+  "dependencies": {
+    "@elysiajs/static": "^1.4.7",
+    "@types/bun": "^1.3.7",
+    "elysia": "^1.4.22",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-markdown": "^9.0.0",
+    "react-syntax-highlighter": "^16.1.0",
+    "remark-breaks": "4",
+    "remark-gfm": "^4.0.0",
+    "tailwindcss": "4"
+  },
+  "devDependencies": {
+    "bun-plugin-tailwind": "^0.1.2",
+    "typescript": "~5.8.2"
+  }
+}
