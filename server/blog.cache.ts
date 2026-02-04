@@ -12,6 +12,39 @@ let cachedBlogData: BlogData | null = null;
 let lastCacheTime: number = 0;
 const CACHE_TTL = 5 * 60 * 1000; // 5 分钟缓存
 
+/**
+ * 解析 CACHE_IGNORE 环境变量并检查路径是否应该被忽略
+ * 支持的模式:
+ * - 精确匹配: "日记/2024.md"
+ * - 通配符: "日记/*", "草稿/*"
+ * - 多个模式用分号分隔: "日记/*;草稿/*;临时/*"
+ */
+function shouldIgnoreKey(key: string): boolean {
+  const ignorePattern = process.env.CACHE_IGNORE;
+  if (!ignorePattern) return false;
+
+  const patterns = ignorePattern
+    .split(";")
+    .map((p) => p.trim())
+    .filter(Boolean);
+
+  for (const pattern of patterns) {
+    // 将通配符模式转换为正则表达式
+    // 转义特殊字符，但保留 * 作为通配符
+    const regexPattern = pattern
+      .replace(/[.+?^${}()|[\]\\]/g, "\\$&") // 转义正则特殊字符
+      .replace(/\*/g, ".*"); // * 转为 .*
+
+    const regex = new RegExp(`^${regexPattern}$`);
+
+    if (regex.test(key)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 // 内部持久化缓存，用于增量更新
 // Key -> { lastModified, post }
 const postsInternalCache = new Map<
@@ -44,10 +77,21 @@ export async function loadBlogCache(force: boolean = false): Promise<BlogData> {
 
   const currentS3Keys = new Set<string>();
   let hasChanges = false;
+  let ignoredCount = 0;
 
-  // 1. 找出当前 S3 中的所有 key
+  // 1. 找出当前 S3 中的所有 key（排除被忽略的）
   for (const file of markdownFiles) {
-    if (file.key) currentS3Keys.add(file.key);
+    if (file.key) {
+      if (shouldIgnoreKey(file.key)) {
+        ignoredCount++;
+        continue;
+      }
+      currentS3Keys.add(file.key);
+    }
+  }
+
+  if (ignoredCount > 0) {
+    console.log(`Ignored ${ignoredCount} files based on CACHE_IGNORE pattern`);
   }
 
   // 2. 移除已被删除的文件
@@ -62,6 +106,11 @@ export async function loadBlogCache(force: boolean = false): Promise<BlogData> {
   // 3. 处理新增或修改的文件
   for (const file of markdownFiles) {
     if (!file.key) continue;
+
+    // 跳过被忽略的文件
+    if (shouldIgnoreKey(file.key)) {
+      continue;
+    }
 
     const s3LastModified = file.lastModified
       ? new Date(file.lastModified).getTime()
