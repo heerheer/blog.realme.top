@@ -20,11 +20,11 @@ const postsInternalCache = new Map<
 >();
 
 // 加载并缓存博客数据
-export async function loadBlogCache(): Promise<BlogData> {
+export async function loadBlogCache(force: boolean = false): Promise<BlogData> {
   const now = Date.now();
 
   // 如果缓存有效，直接返回
-  if (cachedBlogData && now - lastCacheTime < CACHE_TTL) {
+  if (!force && cachedBlogData && now - lastCacheTime < CACHE_TTL) {
     return cachedBlogData;
   }
 
