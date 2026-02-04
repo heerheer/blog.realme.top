@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "bun ./server.ts --watch",
-    "build": "bun build ./server.ts --outdir=./dist --target=bun"
+    "build": "bun build ./server.ts --outdir ./dist --target bun --production --env=inline"
   },
   "dependencies": {
     "@elysiajs/static": "^1.4.7",
