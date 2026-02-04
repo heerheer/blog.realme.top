@@ -146,7 +146,7 @@ export async function loadBlogCache(force: boolean = false): Promise<BlogData> {
               title: metadata.title || file.key,
               excerpt: generateExcerpt(content),
               content: contentWithoutMetadata,
-              date: metadata.date || new Date().toISOString(),
+              date: metadata.date || new Date(s3LastModified).toISOString(),
               tags: metadata.tags || [],
               readTime: calculateReadTime(contentWithoutMetadata),
             };

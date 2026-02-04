@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "bun ./server.ts --watch",
-    "build": "bun build ./server.ts --outdir ./dist --target bun --production --env=inline"
+    "dev": "bun ./app.ts --watch",
+    "build": "bun build ./app.ts --outdir ./dist --target bun --production --env=inline"
   },
   "dependencies": {
     "@elysiajs/static": "^1.4.7",

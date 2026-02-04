@@ -8,22 +8,33 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap"
+      href="https://cdn.jsdelivr.net/npm/fontsource-noto-sans-sc@4.0.0/index.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/jetbrains-mono@1.0.6/css/jetbrains-mono.css"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.2.8/index.min.css"
       rel="stylesheet"
     />
     <style>
       body {
-        font-family: "Inter", sans-serif;
+        font-family: "Inter", "Noto Sans SC", sans-serif;
         background-color: #fafafa;
       }
+
       pre,
       code {
-        font-family: "Fira Code", monospace;
+        font-family: "JetBrains Mono", monospace;
       }
+
       .dot-pattern {
         background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
         background-size: 24px 24px;
       }
+
       .line-pattern {
         background-image: linear-gradient(
           to right,
@@ -32,15 +43,18 @@
         );
         background-size: 40px 100%;
       }
+
       /* Custom transitions for bottom sheet */
       .bottom-sheet-transition {
         transition:
           height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
           transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       }
+
       .no-scrollbar::-webkit-scrollbar {
         display: none;
       }
+
       .no-scrollbar {
         -ms-overflow-style: none;
         scrollbar-width: none;
@@ -49,6 +63,7 @@
     <link rel="stylesheet" href="tailwindcss" />
     <link rel="icon" type="image/png" href="favicon.png" />
   </head>
+
   <body>
     <div id="root"></div>
     <script type="module" src="../src/index.tsx"></script>
