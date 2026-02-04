@@ -1,40 +1,29 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Post, BlogData } from '@/types';
-import { fetchBlogPosts } from '../services/blogService';
+import React, { useState, useMemo } from 'react';
+import { Post } from '@/types';
+import { useBlogData } from '../hooks/useBlogData';
 import Tag from '../components/Tag';
 import PostViewer from '../components/PostViewer';
 
 const HomePage: React.FC = () => {
-    const navigate = useNavigate();
-    const [data, setData] = useState<BlogData>({ posts: [], availableTags: [] });
-    const [loading, setLoading] = useState(true);
+    const { data, isLoading, isError } = useBlogData();
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedTag, setSelectedTag] = useState<string | null>(null);
     const [selectedPost, setSelectedPost] = useState<Post | null>(null);
 
-    useEffect(() => {
-        const loadContent = async () => {
-            setLoading(true);
-            const blogContent = await fetchBlogPosts();
-            setData(blogContent);
-            setLoading(false);
-        };
-        loadContent();
-    }, []);
-
     const filteredPosts = useMemo(() => {
+        if (!data) return [];
         return data.posts.filter(post => {
             const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
             const matchesTag = selectedTag ? post.tags.includes(selectedTag) : true;
             return matchesSearch && matchesTag;
         });
-    }, [data.posts, searchQuery, selectedTag]);
+    }, [data, searchQuery, selectedTag]);
 
     const recentPosts = useMemo(() => {
+        if (!data) return [];
         return data.posts.slice(0, 3);
-    }, [data.posts]);
+    }, [data]);
 
     const formatDate = (dateStr: string) => {
         const date = new Date(dateStr);
@@ -53,11 +42,27 @@ const HomePage: React.FC = () => {
         setSelectedPost(null);
     };
 
-    if (loading) {
+    if (isLoading) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center space-y-4 dot-pattern">
                 <div className="w-12 h-12 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin"></div>
                 <p className="text-sm font-medium text-slate-500 uppercase tracking-widest">Loading blog data...</p>
+            </div>
+        );
+    }
+
+    if (isError || !data) {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center space-y-4 dot-pattern">
+                <div className="text-6xl text-slate-200 mb-4">⚠️</div>
+                <h2 className="text-2xl font-bold text-slate-900">Failed to Load Blog</h2>
+                <p className="text-slate-500">Please try refreshing the page.</p>
+                <button
+                    onClick={() => window.location.reload()}
+                    className="mt-6 px-6 py-2 text-xs font-black uppercase tracking-widest border-2 border-slate-900 hover:bg-slate-900 hover:text-white transition-colors"
+                >
+                    Reload Page
+                </button>
             </div>
         );
     }

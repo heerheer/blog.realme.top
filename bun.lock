@@ -6,6 +6,7 @@
       "name": "minimalist-journal",
       "dependencies": {
         "@elysiajs/static": "^1.4.7",
+        "@tanstack/react-query": "^5.90.20",
         "@types/bun": "^1.3.7",
         "elysia": "^1.4.22",
         "react": "^19.2.4",
@@ -53,6 +54,10 @@
     "@oven/bun-windows-x64-baseline": ["@oven/bun-windows-x64-baseline@1.3.7", "", { "os": "win32", "cpu": "x64" }, "sha512-wMgELfW5vFceh4qEOYb5iV5TjrjjnBJzE383ixA3kqGKzaubksSxNc11eZhS0ptcJ5a0UjN5hfbMh6sYoh+cRQ=="],
 
     "@sinclair/typebox": ["@sinclair/typebox@0.34.48", "", {}, "sha512-kKJTNuK3AQOrgjjotVxMrCn1sUJwM76wMszfq1kdU4uYVJjvEWuFQ6HgvLt4Xz3fSmZlTOxJ/Ie13KnIcWQXFA=="],
+
+    "@tanstack/query-core": ["@tanstack/query-core@5.90.20", "", {}, "sha512-OMD2HLpNouXEfZJWcKeVKUgQ5n+n3A2JFmBaScpNDUqSrQSjiveC7dKMe53uJUg1nDG16ttFPz2xfilz6i2uVg=="],
+
+    "@tanstack/react-query": ["@tanstack/react-query@5.90.20", "", { "dependencies": { "@tanstack/query-core": "5.90.20" }, "peerDependencies": { "react": "^18 || ^19" } }, "sha512-vXBxa+qeyveVO7OA0jX1z+DeyCA4JKnThKv411jd5SORpBKgkcVnYKCiBgECvADvniBX7tobwBmg01qq9JmMJw=="],
 
     "@tokenizer/inflate": ["@tokenizer/inflate@0.4.1", "", { "dependencies": { "debug": "^4.4.3", "token-types": "^6.1.1" } }, "sha512-2mAv+8pkG6GIZiF1kNg1jAjh27IDxEPKwdGul3snfztFerfPGI1LjDezZp3i7BElXompqEtPmoPx6c2wgtWsOA=="],
 
