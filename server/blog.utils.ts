@@ -76,4 +76,15 @@ function generateExcerpt(content: string, maxLength: number = 150): string {
     : plainText;
 }
 
-export { parseMarkdownMetadata, calculateReadTime, generateExcerpt };
+// 生成固定长度的Post ID（基于文件路径的哈希）
+async function generatePostId(filePath: string): Promise<string> {
+  // 使用 Bun 的 crypto API
+  const hasher = new Bun.CryptoHasher("sha256");
+  hasher.update(filePath);
+  const hash = hasher.digest("hex");
+  
+  // 返回前12位作为固定长度ID（足够唯一且简短）
+  return hash.substring(0, 12);
+}
+
+export { parseMarkdownMetadata, calculateReadTime, generateExcerpt, generatePostId };

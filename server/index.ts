@@ -15,12 +15,12 @@ export const server = new Elysia()
   })
   .get("/api/blogs/:id", async ({ params: { id }, blogCache }) => {
     const data: BlogData = await blogCache();
-    const post = data.posts.find(p => p.id === id);
-    
+    const post = data.posts.find((p) => p.id === id);
+
     if (!post) {
       return new Response("Post not found", { status: 404 });
     }
-    
+
     return post;
   })
   .get("/api/tags", async ({ blogCache }) => {
@@ -29,9 +29,9 @@ export const server = new Elysia()
   })
   .get("/api/blogs/tag/:tag", async ({ params: { tag }, blogCache }) => {
     const data: BlogData = await blogCache();
-    const filteredPosts = data.posts.filter(post => 
-      post.tags.some(t => t.toLowerCase() === tag.toLowerCase())
+    const filteredPosts = data.posts.filter((post) =>
+      post.tags.some((t) => t.toLowerCase() === tag.toLowerCase()),
     );
-    
+
     return { posts: filteredPosts };
   });

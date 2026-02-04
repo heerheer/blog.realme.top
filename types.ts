@@ -1,5 +1,6 @@
 export interface Post {
   id: string;
+  postPath: string; // 原始文件路径
   title: string;
   excerpt: string;
   content: string;

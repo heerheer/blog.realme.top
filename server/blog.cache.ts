@@ -4,6 +4,7 @@ import {
   parseMarkdownMetadata,
   calculateReadTime,
   generateExcerpt,
+  generatePostId,
 } from "./blog.utils";
 
 // 缓存的博客数据
@@ -87,8 +88,12 @@ export async function loadBlogCache(): Promise<BlogData> {
               "",
             );
 
+            const postPath = file.key.replace(".md", "");
+            const postId = await generatePostId(postPath);
+
             const post: Post = {
-              id: file.key.replace(".md", ""),
+              id: postId,
+              postPath: postPath,
               title: metadata.title || file.key,
               excerpt: generateExcerpt(content),
               content: contentWithoutMetadata,

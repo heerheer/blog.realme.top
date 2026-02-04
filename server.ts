@@ -3,7 +3,7 @@ import { staticPlugin } from "@elysiajs/static";
 import { server } from "./server/index";
 import index from "public/index.html";
 new Elysia()
-  .get("/", index)
+  .get("/*", index)
   .use(
     await staticPlugin({
       prefix: "/",
