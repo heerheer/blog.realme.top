@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Post } from '@/types';
 import Tag from './Tag';
 import MarkdownRenderer from './MarkdownRenderer';
+import { fetchPostById } from '../services/blogService';
+
+type PostTrailItem = { id: string; title: string };
 
 interface PostViewerProps {
     post: Post;
@@ -9,17 +13,187 @@ interface PostViewerProps {
 }
 
 const PostViewer: React.FC<PostViewerProps> = ({ post, onClose }) => {
+    const navigate = useNavigate();
+    const location = useLocation();
     const [isExpanded, setIsExpanded] = useState(false);
+    const [currentPost, setCurrentPost] = useState<Post>(post);
+    const [isNavigating, setIsNavigating] = useState(false);
+    const [trail, setTrail] = useState<PostTrailItem[]>([
+        { id: post.id, title: post.title }
+    ]);
     const contentRef = useRef<HTMLDivElement>(null);
+
+    const scrollToHashTarget = () => {
+        if (!contentRef.current) return;
+
+        const rawHash = window.location.hash || "";
+        const target = rawHash.replace(/^#+/, "").trim();
+        if (!target) return;
+
+        const candidates = [
+            target,
+            decodeURIComponent(target),
+            encodeURIComponent(decodeURIComponent(target))
+        ].filter((value, index, self) => value && self.indexOf(value) === index);
+
+        const findInContainer = (id: string) => {
+            if (typeof CSS !== "undefined" && "escape" in CSS) {
+                return contentRef.current?.querySelector(`#${CSS.escape(id)}`) as HTMLElement | null;
+            }
+            return contentRef.current?.querySelector(`[id="${id}"]`) as HTMLElement | null;
+        };
+
+        const element = candidates
+            .map((id) => findInContainer(id))
+            .find((el) => el);
+
+        if (element) {
+            element.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+    };
 
     useEffect(() => {
         setIsExpanded(false);
+        setCurrentPost(post);
+        setTrail([{ id: post.id, title: post.title }]);
         document.body.style.overflow = 'hidden';
+
+        if (typeof window !== 'undefined') {
+            const existing = window.history.state;
+            if (!existing || !existing.trail) {
+                window.history.replaceState(
+                    { trail: [{ id: post.id, title: post.title }] },
+                    '',
+                    window.location.href
+                );
+            }
+        }
+
+        const timer = window.setTimeout(() => {
+            scrollToHashTarget();
+        }, 0);
+
+        const handleHashChange = () => {
+            scrollToHashTarget();
+        };
+
+        window.addEventListener('hashchange', handleHashChange);
 
         return () => {
             document.body.style.overflow = 'auto';
+            window.removeEventListener('hashchange', handleHashChange);
+            window.clearTimeout(timer);
         };
     }, [post]);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        const handlePopState = async (event: PopStateEvent) => {
+            const stateTrail: PostTrailItem[] | undefined = event.state?.trail;
+            if (stateTrail && Array.isArray(stateTrail) && stateTrail.length > 0) {
+                setTrail(stateTrail);
+            }
+
+            const match = window.location.pathname.match(/^\/posts\/([^/]+)$/);
+            const nextId = match ? match[1] : null;
+            if (!nextId || nextId === currentPost.id) {
+                scrollToHashTarget();
+                return;
+            }
+
+            setIsNavigating(true);
+            const nextPost = await fetchPostById(nextId);
+            if (nextPost) {
+                setCurrentPost(nextPost);
+            }
+            setIsNavigating(false);
+            setTimeout(() => scrollToHashTarget(), 0);
+        };
+
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, [currentPost.id]);
+
+    const navigateToPostId = async (
+        nextId: string,
+        nextTrail: PostTrailItem[],
+        mode: 'push' | 'replace' = 'push',
+        hash: string = ''
+    ) => {
+        setIsNavigating(true);
+        const nextPost = await fetchPostById(nextId);
+        if (nextPost) {
+            const updatedTrail = nextTrail.map((item, index) => {
+                if (index === nextTrail.length - 1 && item.id === nextPost.id) {
+                    return { ...item, title: nextPost.title };
+                }
+                return item;
+            });
+            setCurrentPost(nextPost);
+            setTrail(updatedTrail);
+            const nextPath = `/posts/${nextPost.id}${hash}`;
+            if (mode === 'push') {
+                window.history.pushState({ trail: updatedTrail }, '', nextPath);
+            } else {
+                window.history.replaceState({ trail: updatedTrail }, '', nextPath);
+            }
+            setTimeout(() => scrollToHashTarget(), 0);
+        }
+        setIsNavigating(false);
+    };
+
+    const handleBreadcrumbClick = async (index: number) => {
+        if (index < 0 || index >= trail.length) return;
+        const target = trail[index];
+        if (target.id === currentPost.id) return;
+        const nextTrail = trail.slice(0, index + 1);
+        await navigateToPostId(target.id, nextTrail, 'push');
+    };
+
+    const handleInternalLinkClick = async (href: string) => {
+        if (!href) return;
+
+        if (href.startsWith('#')) {
+            const normalizedHash = `#${href.replace(/^#+/, '')}`;
+            window.history.replaceState({}, '', `${window.location.pathname}${window.location.search}${normalizedHash}`);
+            scrollToHashTarget();
+            return;
+        }
+
+        try {
+            const url = new URL(href, window.location.origin);
+            const match = url.pathname.match(/^\/posts\/([^/]+)$/);
+            if (match) {
+                const nextId = match[1];
+                const nextTrail: PostTrailItem[] = [
+                    ...trail,
+                    { id: nextId, title: nextId }
+                ];
+                await navigateToPostId(nextId, nextTrail, 'push', url.hash || '');
+                return;
+            }
+
+            window.location.href = href;
+        } catch {
+            window.location.href = href;
+        }
+    };
+
+    const handleBackClick = () => {
+        if (trail.length > 1) {
+            const previous = trail[trail.length - 2];
+            handleBreadcrumbClick(trail.length - 2);
+            return;
+        }
+
+        if (location.pathname.startsWith('/posts/')) {
+            onClose();
+            return;
+        }
+
+        onClose();
+    };
 
     const formatDate = (dateStr: string) => {
         const date = new Date(dateStr);
@@ -38,12 +212,16 @@ const PostViewer: React.FC<PostViewerProps> = ({ post, onClose }) => {
             >
                 {/* Control Bar / Header */}
                 <div className="sticky top-0 bg-white/90 backdrop-blur px-6 lg:px-10 py-5 flex justify-between items-center border-b border-slate-100 z-20">
-                    <button
-                        onClick={onClose}
+                    <Link
+                        to={trail.length > 1 ? `/posts/${trail[trail.length - 2].id}` : '/'}
+                        onClick={(event) => {
+                            event.preventDefault();
+                            handleBackClick();
+                        }}
                         className="flex items-center text-xs font-black text-slate-900 hover:text-indigo-600 transition-colors group"
                     >
                         <span className="mr-2 group-hover:-translate-x-1 transition-transform">←</span> BACK
-                    </button>
+                    </Link>
 
                     <div className="flex-1 flex justify-center">
                         <div
@@ -52,10 +230,28 @@ const PostViewer: React.FC<PostViewerProps> = ({ post, onClose }) => {
                         ></div>
                     </div>
 
-                    <div className="flex space-x-2">
-                        {post.tags.slice(0, 2).map(tag => (
-                            <Tag key={tag} label={tag} />
-                        ))}
+                    <div className="flex flex-col items-end gap-2 max-w-[60%]">
+                        <nav className="flex items-center space-x-2 text-xs font-semibold text-slate-500 overflow-hidden">
+                            {trail.map((item, index) => (
+                                <React.Fragment key={item.id}>
+                                    {index > 0 && <span className="text-slate-300">-&gt;</span>}
+                                    <button
+                                        onClick={() => handleBreadcrumbClick(index)}
+                                        className={`truncate hover:text-indigo-600 transition-colors ${index === trail.length - 1 ? 'text-slate-700' : ''
+                                            }`}
+                                        title={item.title || item.id}
+                                    >
+                                        {item.title || item.id}
+                                    </button>
+                                </React.Fragment>
+                            ))}
+                        </nav>
+
+                        {/* <div className="flex space-x-2">
+                            {currentPost.tags.slice(0, 2).map(tag => (
+                                <Tag key={tag} label={tag} />
+                            ))}
+                        </div> */}
                     </div>
                 </div>
 
@@ -73,21 +269,31 @@ const PostViewer: React.FC<PostViewerProps> = ({ post, onClose }) => {
                     <div className="max-w-3xl mx-auto">
                         <div className="flex items-center space-x-4 mb-8">
                             <span className="text-xs font-bold text-indigo-600 uppercase tracking-widest">
-                                {formatDate(post.date)}
+                                {formatDate(currentPost.date)}
                             </span>
                             <span className="text-slate-300">•</span>
                             <span className="text-xs font-medium text-slate-400 uppercase tracking-widest">
-                                {post.readTime}
+                                {currentPost.readTime}
                             </span>
                         </div>
 
                         <h1 className="text-4xl md:text-6xl font-black text-slate-900 leading-tight mb-8">
-                            {post.title}
+                            {currentPost.title}
                         </h1>
+
 
                         <div className="h-1.5 w-20 bg-slate-900 mb-16"></div>
 
-                        <MarkdownRenderer content={post.content} />
+                        {isNavigating && (
+                            <div className="text-xs font-medium text-slate-400 mb-4 uppercase tracking-widest">
+                                Loading linked post...
+                            </div>
+                        )}
+
+                        <MarkdownRenderer
+                            content={currentPost.content}
+                            onInternalLinkClick={handleInternalLinkClick}
+                        />
 
                         <div className="mt-24 pt-12 border-t border-slate-100 flex items-center justify-between">
                             <p className="text-xs text-slate-400 font-medium italic">End of Journal Entry</p>

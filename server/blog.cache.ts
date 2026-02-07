@@ -5,6 +5,7 @@ import {
   calculateReadTime,
   generateExcerpt,
   generatePostId,
+  transformObsidianLinks,
 } from "./blog.utils";
 
 // 缓存的博客数据
@@ -137,6 +138,9 @@ export async function loadBlogCache(force: boolean = false): Promise<BlogData> {
               "",
             );
 
+            const contentWithObsidianLinks =
+              await transformObsidianLinks(contentWithoutMetadata);
+
             const postPath = file.key.replace(".md", "");
             const postId = await generatePostId(postPath);
 
@@ -145,7 +149,7 @@ export async function loadBlogCache(force: boolean = false): Promise<BlogData> {
               postPath: postPath,
               title: metadata.title || file.key,
               excerpt: generateExcerpt(content),
-              content: contentWithoutMetadata,
+              content: contentWithObsidianLinks,
               date: metadata.date || new Date(s3LastModified).toISOString(),
               tags: metadata.tags || [],
               readTime: calculateReadTime(contentWithoutMetadata),
